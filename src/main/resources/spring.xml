@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!--创建数据源对象 创建数据库的连接参数  连接池-->
+    <bean class="com.alibaba.druid.pool.DruidDataSource" id="dataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/test"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+
+    </bean>
+
+    <!--创建Mybatis核心 SqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--注入数据库的连接参数 driver/url/username/password-->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- mapper文件的位置-->    <!--mapper文件的location 路径-->
+        <property name="mapperLocations" value="classpath:com.baizhi.mapper/*.xml">
+        </property>
+        <!--实体类别名-->
+        <property name="typeAliasesPackage" value="com.baizhi.entity"/>
+    </bean>
+    <!--创建DAO实现类对象 翻译mapper文件-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+        <!--需要Dao接口类型-->
+        <property name="basePackage" value="com.baizhi.dao"/>
+    </bean>
+    <!--事务控制  事务管理器-->
+    <bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+        <!--依赖于数据源对象-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--通知 固定的那个环绕通知 由Spring提供-->
+    <tx:advice transaction-manager="transactionManager" id="txAdvice">
+    </tx:advice>
+    <!--组装切面-->
+    <aop:config>
+        <aop:pointcut id="pcl" expression="within(com.baizhi.serviceimpl.*)"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pcl"></aop:advisor>
+    </aop:config>
+</beans>
